@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestión de calidad de Pedidos</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css?v=9">
+</head>
+<body>
+    <div class="app-background"></div>
+    
+    <!-- Login Screen -->
+    <div id="login-overlay" class="login-overlay glass-panel">
+        <div class="login-box">
+            <div class="logo-icon" style="text-align: center; margin-bottom: 1rem; font-size: 3rem; color: var(--accent-primary);">
+                <i class="ph ph-lock-key"></i>
+            </div>
+            <h2 style="text-align: center; margin-bottom: 2rem; color: #fff;">Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="login-user" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Usuario (ZV o ADMIN)</label>
+                    <input type="text" id="login-user" required autocomplete="username" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: #fff; padding: 0.8rem; border-radius: 8px; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.3s;">
+                </div>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="login-pass" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Contraseña</label>
+                    <input type="password" id="login-pass" required autocomplete="current-password" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: #fff; padding: 0.8rem; border-radius: 8px; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.3s;">
+                </div>
+                <div id="login-error" style="color: #ef4444; margin-bottom: 1rem; font-size: 0.9rem; text-align: center; display: none;">Usuario o contraseña incorrectos</div>
+                <button type="submit" style="width: 100%; background: var(--accent-primary); color: #fff; border: none; padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.3s; font-family: inherit;">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-content" class="app-container hidden">
+        <!-- Header -->
+        <header class="glass-panel main-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="ph ph-chart-line-up"></i>
+                </div>
+                <div>
+                    <h1>Gestión de calidad de Pedidos</h1>
+                    <p class="subtitle">Gerencia Arequipa, Tacna e Ilo</p>
+                </div>
+            </div>
+            <div id="last-update-container" style="text-align: right; display: none;">
+                <p id="last-update" style="font-size: 0.95rem; font-weight: 500; color: var(--accent-primary);">Última act: --:--</p>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Datos leídos de pedidos.xlsx</p>
+            </div>
+        </header>
+
+        <!-- Loading overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Procesando datos...</p>
+        </div>
+
+        <!-- Initial Empty State -->
+        <div id="empty-state" class="empty-state glass-panel">
+            <div class="empty-icon" style="color: var(--warning);">
+                <i class="ph ph-warning-circle"></i>
+            </div>
+            <h2>No se encontraron datos</h2>
+            <p style="max-width: 500px; margin: 0 auto; line-height: 1.6;">El archivo automático de pedidos diarios no está disponible. Para que el equipo vea la información, asegúrate de subir o actualizar el archivo <strong>pedidos.xlsx</strong> en tu repositorio de GitHub.</p>
+            
+            <!-- Local file upload button -->
+            <div style="margin-top: 2rem;">
+                <input type="file" id="file-upload" accept=".xlsx, .xls, .csv" style="display: none;" />
+                <button onclick="document.getElementById('file-upload').click()" style="background: var(--accent-primary); color: #fff; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.3s; display: inline-flex; align-items: center; gap: 0.5rem; font-family: inherit;">
+                    <i class="ph ph-upload-simple"></i> Cargar Excel Local
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard (Hidden until Excel is parsed) -->
+        <main id="main-dashboard" class="dashboard-layout hidden">
+            <!-- Sidebar: Sellers -->
+            <aside class="glass-panel sidebar">
+                <div class="sidebar-header">
+                    <h2>Vendedores</h2>
+                    <span id="seller-count" class="badge">0</span>
+                </div>
+                <div class="search-container">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="seller-search" placeholder="Buscar vendedor (ZV)...">
+                </div>
+                <ul id="seller-list" class="seller-list">
+                    <!-- Populated by JS -->
+                </ul>
+            </aside>
+
+            <!-- Dashboard Content -->
+            <section class="content-area">
+                <!-- Stats Overview -->
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper teal">
+                            <i class="ph ph-shopping-bag"></i>
+                        </div>
+                        <div class="stat-info">
+                            <p class="stat-label">Total Pedidos</p>
+                            <h3 id="stat-orders" class="stat-value">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper purple">
+                            <i class="ph ph-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <p class="stat-label">Clientes Únicos</p>
+                            <h3 id="stat-clients" class="stat-value">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper orange">
+                            <i class="ph ph-package"></i>
+                        </div>
+                        <div class="stat-info">
+                            <p class="stat-label">Total por Unidad (UM)</p>
+                            <h3 id="stat-boxes" class="stat-value" style="font-size: 1.25rem;">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders List -->
+                <div class="orders-panel glass-panel">
+                    <div class="panel-title" style="text-align: center; margin-bottom: 2rem;">
+                        <h2 style="font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; color: #fff;">Detalle de Pedidos</h2>
+                        <span id="current-seller-name" class="seller-subtitle" style="font-size: 1.1rem;">Selecciona un vendedor</span>
+                    </div>
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div class="date-filter" style="display: flex; align-items: center; gap: 1rem;">
+                            <label for="delivery-filter" style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">Filtro por Entrega:</label>
+                            <input type="date" id="delivery-filter" style="background: rgba(0,0,0,0.3); border: 2px solid var(--accent-primary); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; font-family: inherit; font-size: 1.1rem; font-weight: bold; color-scheme: dark; outline: none; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);">
+                        </div>
+                        <div class="client-search" style="display: flex; justify-content: flex-end;">
+                            <input type="text" id="client-search" placeholder="Buscar cliente o código..." style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: #fff; padding: 0.6rem 1.2rem; border-radius: 8px; font-family: inherit; font-size: 1rem; outline: none; width: 100%; min-width: 300px;">
+                        </div>
+                    </div>
+                    
+                    <div id="global-view-container" style="display: none; padding: 2rem; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 2rem;">
+                        <!-- Contenido poblado por JS -->
+                    </div>
+                    
+                    <div class="table-container" id="detail-table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Vendedor / Sup.</th>
+                                    <th>Producto</th>
+                                    <th>Cajas</th>
+                                    <th>Fecha de Creación</th>
+                                    <th>Tipo</th>
+                                    <th>Condición Pago</th>
+                                    <th>Prepago</th>
+                                    <th>Bloqueado</th>
+                                    <th class="text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <div class="toast-icon">
+            <i class="ph-fill ph-check-circle"></i>
+        </div>
+        <div class="toast-content">
+            <h4>¡Copiado!</h4>
+            <p id="toast-message">El pedido ha sido marcado para anular.</p>
+        </div>
+    </div>
+
+    <script src="app.js?v=31"></script>
+</body>
+</html>
