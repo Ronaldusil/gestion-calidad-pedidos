@@ -14,7 +14,7 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="styles.css?v=156">
+    <link rel="stylesheet" href="styles.css?v=160">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -138,33 +138,32 @@ window.onerror = function(msg, url, line, col, error) {
             <section class="content-area">
                 <!-- Stats Overview -->
                                                                                 <div id="global-view-container" style="display:none;"></div>
-<div class="dashboard-container" id="stats-grid-container">
+<div class="kpi-container" id="stats-grid-container">
   
   <!-- Tarjeta 1: Resumen General -->
   <div class="card card-accent-purple kpi-card" style="display:flex; flex-direction:column; justify-content:space-between;">
-  <h3 class="card-title">RESUMEN GENERAL</h3>
-  <div class="resumen-grid">
-    <div class="resumen-caja">
-      <span class="resumen-titulo">VENTAS (CA)</span>
-      <span class="resumen-valor" id="stat-sales-ca">0</span>
+    <h3 class="card-title">RESUMEN GENERAL</h3>
+    <div class="resumen-grid">
+      <div class="resumen-caja">
+        <span class="resumen-titulo">VENTAS (CA)</span>
+        <span class="resumen-valor" id="stat-sales-ca">0</span>
+      </div>
+      <div class="resumen-caja">
+        <span class="resumen-titulo">VENTAS (HL)</span>
+        <span class="resumen-valor" id="stat-sales-hl">0.00</span>
+      </div>
+      <div class="resumen-caja">
+        <span class="resumen-titulo">CLIENTES</span>
+        <span class="resumen-valor" id="stat-clients">0</span>
+      </div>
     </div>
-    <div class="resumen-caja">
-      <span class="resumen-titulo">VENTAS (HL)</span>
-      <span class="resumen-valor" id="stat-sales-hl">0.00</span>
-    </div>
-    <div class="resumen-caja">
-      <span class="resumen-titulo">CLIENTES</span>
-      <span class="resumen-valor" id="stat-clients">0</span>
-    </div>
-  </div>
-</div>
     <div id="stat-boxes" style="display:none;"></div>
     <div id="stat-orders" style="display:none;"></div>
     <div id="stat-orders-sub" style="display:none;"></div>
   </div>
 
   <!-- Tarjeta 2: Vta. por Categoría -->
-  <div class="card card-accent-green kpi-card">
+  <div class="card card-accent-green kpi-card" id="card-categoria">
     <h3 class="card-title">VTA. POR CATEGORÍA (CA)</h3>
     <div id="stat-categories" class="categorias-grid">
         <!-- Populated by JS -->
@@ -172,56 +171,56 @@ window.onerror = function(msg, url, line, col, error) {
   </div>
 
   <!-- Tarjeta 3: Estados y Alertas -->
-  <div class="card kpi-card">
+  <div class="card kpi-card" id="card-alertas">
     <h3 class="card-title">Estados y Alertas</h3>
     <div class="status-list">
       <!-- Item: Bloqueado -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon warning" style="font-size: 1.2rem;">⚠️</span>
+          <span class="status-icon icon-bloqueado" style="font-size: 1.2rem;">⚠️</span>
           <span class="status-label">Bloqueado</span>
         </div>
-        <span class="status-value" id="stat-blocked" style="color: var(--alert-warning);">0</span>
+        <span class="status-value highlight-bloqueado" id="stat-blocked" style="color: var(--alert-warning);">0</span>
       </div>
       <!-- Item: Prepago -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon" style="font-size: 1.2rem;">💳</span>
+          <span class="status-icon icon-prepago" style="font-size: 1.2rem;">💳</span>
           <span class="status-label">Prepago</span>
         </div>
-        <span class="status-value" id="stat-prepago" style="color: #3B82F6;">0</span>
+        <span class="status-value highlight-prepago" id="stat-prepago" style="color: #3B82F6;">0</span>
       </div>
       <!-- Item: Cliente N3 -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon" style="font-size: 1.2rem;">⭐</span>
+          <span class="status-icon icon-n3" style="font-size: 1.2rem;">⭐</span>
           <span class="status-label">Cliente N3</span>
         </div>
-        <span class="status-value" id="stat-n3" style="color: #9333EA;">0</span>
+        <span class="status-value highlight-n3" id="stat-n3" style="color: #9333EA;">0</span>
       </div>
       <!-- Item: Rechazos -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon danger" style="font-size: 1.2rem;">🛑</span>
+          <span class="status-icon icon-rechazos" style="font-size: 1.2rem;">🛑</span>
           <span class="status-label">Rechazos</span>
         </div>
-        <span class="status-value" id="stat-rejected" style="color: var(--alert-danger);">0</span>
+        <span class="status-value highlight-rechazos" id="stat-rejected" style="color: var(--alert-danger);">0</span>
       </div>
-      <!-- Item: > 1 Pedido -->
+      <!-- Item: Mas de 1 Pedido -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon" style="font-size: 1.2rem;">🛒</span>
+          <span class="status-icon icon-multipled" style="font-size: 1.2rem;">🛒</span>
           <span class="status-label">&gt;1 Pedido</span>
         </div>
-        <span class="status-value" id="stat-multi-order" style="color: var(--accent-green);">0</span>
+        <span class="status-value highlight-multipled" id="stat-multi-order" style="color: var(--accent-green);">0</span>
       </div>
-      <!-- Item: > 50 Cajas -->
+      <!-- Item: Mas de 50 Cajas -->
       <div class="status-item">
         <div class="status-info">
-          <span class="status-icon" style="font-size: 1.2rem;">📦</span>
+          <span class="status-icon icon-bigorder" style="font-size: 1.2rem;">📦</span>
           <span class="status-label">&gt;50 Cajas</span>
         </div>
-        <span class="status-value" id="stat-high-vol" style="color: var(--accent-purple);">0</span>
+        <span class="status-value highlight-bigorder" id="stat-high-vol" style="color: var(--accent-purple);">0</span>
       </div>
     </div>
   </div>
@@ -302,7 +301,7 @@ window.onerror = function(msg, url, line, col, error) {
         </div>
     </div>
 
-    <script src="app.js?v=156"></script>
+    <script src="app.js?v=160"></script>
 
     <!-- Modal Detalles -->
     <div id="details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
